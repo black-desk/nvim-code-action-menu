@@ -13,9 +13,8 @@ local function unpack_result_and_error(server_data, client_id)
 
     if type(server_data.err) == 'string' then
       error = error .. server_data.err
-    elseif
-      type(server_data.err) == 'table'
-      and type(server_data.err.message) == 'string'
+    elseif type(server_data.err) == 'table'
+        and type(server_data.err.message) == 'string'
     then
       error = error .. server_data.err.message
     else
@@ -42,23 +41,21 @@ local function resolve_code_action(client_id, code_action_object)
   return action_object
 end
 
-local function parse_object_as_action(code_action_object)
-  if
-    type(code_action_object) == 'table'
-    and type(code_action_object.command) == 'string'
+local function parse_object_as_action(code_action_object, offset_encoding)
+  if type(code_action_object) == 'table'
+      and type(code_action_object.command) == 'string'
   then
     return Command:new(code_action_object)
-  elseif
-    type(code_action_object) == 'table'
-    and (
+  elseif type(code_action_object) == 'table'
+      and (
       type(code_action_object.edit) == 'table'
-      or type(code_action_object.command) == 'table'
-    )
+          or type(code_action_object.command) == 'table'
+      )
   then
-    return CodeAction:new(code_action_object)
+    return CodeAction:new(code_action_object, offset_encoding)
   else
     local error =
-      'Failed to parse unknown code action or command data structure! Skipped.'
+    'Failed to parse unknown code action or command data structure! Skipped.'
     vim.api.nvim_notify(error, vim.log.levels.WARN, {})
     return nil
   end
@@ -68,13 +65,12 @@ local function parse_action_data_objects(client_id, all_code_action_objects)
   local all_actions = {}
 
   for _, code_action_object in ipairs(all_code_action_objects) do
-    if
-      type(code_action_object) == 'table' and code_action_object.data ~= nil
+    if type(code_action_object) == 'table' and code_action_object.data ~= nil
     then
       code_action_object = resolve_code_action(client_id, code_action_object)
     end
 
-    local action = parse_object_as_action(code_action_object)
+    local action = parse_object_as_action(code_action_object, vim.lsp.get_client_by_id(client_id).offset_encoding)
 
     if action ~= nil then
       table.insert(all_actions, action)
@@ -109,7 +105,7 @@ local function request_actions_from_all_servers(use_range)
   local line_diagnostics = vim.lsp.diagnostic.get_line_diagnostics()
   local request_parameters = use_range
       and vim.lsp.util.make_given_range_params()
-    or vim.lsp.util.make_range_params()
+      or vim.lsp.util.make_range_params()
 
   request_parameters.context = { diagnostics = line_diagnostics }
 

@@ -1,15 +1,15 @@
 local BaseAction = require('code_action_menu.lsp_objects.actions.base_action')
 local TextDocumentEdit = require(
-  'code_action_menu.lsp_objects.edits.text_document_edit'
+'code_action_menu.lsp_objects.edits.text_document_edit'
 )
 local WorkspaceEdit = require(
-  'code_action_menu.lsp_objects.edits.workspace_edit'
+'code_action_menu.lsp_objects.edits.workspace_edit'
 )
 
 local CodeAction = BaseAction:new({})
 
-function CodeAction:new(server_data)
-  local instance = BaseAction:new(server_data)
+function CodeAction:new(server_data, offset_encoding)
+  local instance = BaseAction:new(server_data, offset_encoding)
   setmetatable(instance, self)
   self.__index = self
   return instance
@@ -78,7 +78,7 @@ end
 
 function CodeAction:execute()
   if self:is_workspace_edit() then
-    vim.lsp.util.apply_workspace_edit(self.server_data.edit, 'utf-8')
+    vim.lsp.util.apply_workspace_edit(self.server_data.edit, self.offset_enc)
   elseif self:is_command() then
     vim.lsp.buf.execute_command(self.server_data.command)
   else
